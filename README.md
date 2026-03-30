@@ -64,7 +64,7 @@ src/
 │ │ └── index.css
 ├── utils/
 │ ├── apiHelpers.js
-│ └── constants.js
+│
 ├── App.jsx
 ├── App.css
 ├── main.jsx
