@@ -1,6 +1,5 @@
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_KEY;
 const STABILITY_API_KEY = import.meta.env.VITE_STABILITY_KEY;
-const HF_API_KEY = import.meta.env.VITE_HF_API_KEY;
 
 export const getEnhancedPrompt = async (input) => {
   try {
@@ -17,36 +16,7 @@ export const getEnhancedPrompt = async (input) => {
               role: "user",
               parts: [
                 {
-                  text: `
-You are an expert prompt engineer.
-
-If the user input is not an image description, convert it into a detailed visual scene.
-
-Enhance the prompt with:
-- lighting
-- camera angle
-- artistic style
-
-Generate 3 different improved prompts.
-
-Return output strictly in this format:
-
-Considering your prompt, I have improved it into 3 types of prompts. Please select the best one.
-
-Prompt-A: <short explanation (1 line) >
-
-<enhanced prompt>
-
-Prompt-B: <short explanation (1 line)>
-
-<enhanced prompt>
-
-Prompt-C: <short explanation (1 line)>
-
-<enhanced prompt>
-
-User input: ${input}
-`,
+                  text: `Generate 3 enhanced prompts... User input: ${input}`,
                 },
               ],
             },
@@ -56,10 +26,26 @@ User input: ${input}
     );
 
     const data = await response.json();
-    console.log("Enhanced Prompt Response:", data);
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text || input;
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data?.error?.message || "Failed to enhance prompt",
+      };
+    }
+
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+    return {
+      success: true,
+      data: text,
+    };
   } catch (error) {
-    return input;
+    console.log(error);
+    return {
+      success: false,
+      error: "Network error. Please try again.",
+    };
   }
 };
 
@@ -78,9 +64,7 @@ export const analyzeImage = async (base64Image) => {
           contents: [
             {
               parts: [
-                {
-                  text: "Analyze this image and generate a detailed prompt describing subject, colors, lighting, background, and style for AI image generation.",
-                },
+                { text: "Analyze image and generate prompt" },
                 {
                   inline_data: {
                     mime_type: "image/jpeg",
@@ -94,18 +78,25 @@ export const analyzeImage = async (base64Image) => {
       },
     );
 
-    if (!response.ok) {
-      const error = await response.json();
-      console.log("Gemini API Error:", error);
-      return "";
-    }
-
     const data = await response.json();
 
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data?.error?.message || "Image analysis failed",
+      };
+    }
+
+    return {
+      success: true,
+      data: data?.candidates?.[0]?.content?.parts?.[0]?.text || "",
+    };
   } catch (error) {
-    console.log("Analyze Image Error:", error);
-    return "";
+    console.log(error);
+    return {
+      success: false,
+      error: "Network error while analyzing image",
+    };
   }
 };
 
@@ -126,18 +117,35 @@ export const generateImage = async (prompt) => {
         body: formData,
       },
     );
-    // console.log("Generate Image Response:", response);
+
     if (!response.ok) {
-      const error = await response.json();
-      console.log("Error:", error);
-      return null;
+      let errorMessage = "Image generation failed";
+
+      if (response.status === 402) {
+        errorMessage =
+          "Payment required. Please check your Stability API plan.";
+      } else if (response.status === 401) {
+        errorMessage = "Invalid Stability API key.";
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
     }
 
     const blob = await response.blob();
     const imageUrl = URL.createObjectURL(blob);
-    return imageUrl;
+
+    return {
+      success: true,
+      data: imageUrl,
+    };
   } catch (error) {
     console.log(error);
-    return null;
+    return {
+      success: false,
+      error: "Network error while generating image",
+    };
   }
 };

@@ -8,18 +8,38 @@ const WorkflowText = () => {
   const [enhancedPrompt, setEnhancedPrompt] = useState("");
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleEnhance = async () => {
     setLoading(true);
-    const result = await getEnhancedPrompt(input);
-    setEnhancedPrompt(result);
+    setErrorMessage("");
+
+    const res = await getEnhancedPrompt(input);
+    if (!res.success) {
+      const error = res.error.split(".")[0] || res.error;
+      setErrorMessage(error);
+      setLoading(false);
+      return;
+    }
+
+    setEnhancedPrompt(res.data);
     setLoading(false);
   };
 
   const handleGenerateImage = async () => {
     setLoading(true);
-    const img = await generateImage(enhancedPrompt);
-    setImage(img);
+    setErrorMessage("");
+
+    const res = await generateImage(enhancedPrompt);
+
+    if (!res.success) {
+      const error = res.error.split(".")[0] || res.error;
+      setErrorMessage(error);
+      setLoading(false);
+      return;
+    }
+
+    setImage(res.data);
     setLoading(false);
   };
 
@@ -33,13 +53,15 @@ const WorkflowText = () => {
 
       <button onClick={handleEnhance}>Enhance Prompt</button>
 
+      {errorMessage && <p className="error">{errorMessage}</p>}
+
       {enhancedPrompt && (
         <>
           <textarea
             value={enhancedPrompt}
             onChange={(e) => setEnhancedPrompt(e.target.value)}
           />
-          <button onClick={handleGenerateImage}>Generate Image</button>
+          <button onClick={handleGenerateImage}>Generate </button>
         </>
       )}
 

@@ -8,6 +8,7 @@ const WorkflowImage = () => {
   const [prompt, setPrompt] = useState("");
   const [resultImage, setResultImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleFile = (file) => {
     const reader = new FileReader();
@@ -20,15 +21,35 @@ const WorkflowImage = () => {
 
   const handleAnalyzeImage = async () => {
     setLoading(true);
+    setErrorMessage("");
+
     const res = await analyzeImage(imageFile);
-    setPrompt(res);
+
+    if (!res.success) {
+      const error = res.error.split(".")[0] || res.error;
+      setErrorMessage(error);
+      setLoading(false);
+      return;
+    }
+
+    setPrompt(res.data);
     setLoading(false);
   };
 
   const handleGenerate = async () => {
     setLoading(true);
-    const img = await generateImage(prompt);
-    setResultImage(img);
+    setErrorMessage("");
+
+    const res = await generateImage(prompt);
+
+    if (!res.success) {
+      const error = res.error.split(".")[0] || res.error;
+      setErrorMessage(error);
+      setLoading(false);
+      return;
+    }
+
+    setResultImage(res.data);
     setLoading(false);
   };
 
@@ -41,6 +62,8 @@ const WorkflowImage = () => {
       />
 
       <button onClick={handleAnalyzeImage}>Analyze Image</button>
+
+      {errorMessage && <p className="error">{errorMessage}</p>}
 
       {prompt && (
         <>
