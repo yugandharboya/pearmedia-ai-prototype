@@ -1,0 +1,25 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background: #1e1e2f;
+  color: #fff;
+}
+
+.logo {
+  margin: 0;
+}
+
+.tabs button {
+  margin-left: 10px;
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.tabs .active {
+  background: #6366f1;
+  color: white;
+}

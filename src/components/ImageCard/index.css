@@ -1,0 +1,8 @@
+.image-card {
+  margin-top: 20px;
+}
+
+.image-card img {
+  width: 300px;
+  border-radius: 10px;
+}
